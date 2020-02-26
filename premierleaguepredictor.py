@@ -6,7 +6,7 @@ import datetime
 import numpy as np
 from scipy.stats import poisson
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import axes3d
+
 
 
 
@@ -62,8 +62,8 @@ strengths['WtdAwayDefenceWeakness'] = strengths.apply(lambda x: (w*x.AvgHomeConc
 
 
 # Obtain file containing future fixtures as csv
-filename2 = 'C:\\Users\\Carlisle\\Documents\\Python Scripts\\epl-2019-GMTStandardTime.csv'
-fixtures = pd.read_csv(filename2) # Problems downloading file from web, unreliable source
+filename2 = 'https://fixturedownload.com/download/epl-2019-GMTStandardTime.csv'
+fixtures = pd.read_csv(filename2)
 fixtures['Date'] = pd.to_datetime(fixtures['Date'], format = '%d/%m/%Y %H:%M')
 
 # Filter for future dates, saving Date and both Teams only
