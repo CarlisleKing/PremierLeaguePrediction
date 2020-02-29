@@ -9,26 +9,41 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 
-# Set arguments for the model
-today = datetime.date.today() # date to work from
-w = 0.33    # w = weighting for home vs away
-future_games = 10 # number of games to predict
+# List of arguments for the model:
+# today = datetime.date object, date to work from, between 19/08/2016 and today (before last day of a season, and after the first)
+# w = float object, weighting for home vs away between 0 and 1
+# future_games = int object, number of games to predict (at most the number of games left between today and end of season)
+
+
+def premGetSeason(today = datetime.date.today()):
+    seasons = [1617, 1718, 1819, 1920]
+    if (today.year == 2016) | ((today.year == 2017) & (today.month<8)):
+        season = seasons[0]
+    elif ((today.year == 2017) & (today.month >= 8)) | ((today.year == 2018) & (today.month<8)):
+        season = seasons[1]
+    elif ((today.year == 2018) & (today.month >= 8)) | ((today.year == 2019) & (today.month<8)):
+        season = seasons[2]
+    elif ((today.year == 2019) & (today.month >= 8)) | (today.year == 2020):
+        season = seasons[3]
+
+    return season
 
 
 
 
-
-def premGetScores():# Obtain file containing scores as csv
+def premGetScores(today = datetime.date.today()):# Obtain file containing scores as csv
+    season = premGetSeason(today)
     site = "http://www.football-data.co.uk/"
-    filename = site + "mmz4281/"+ "1920" + "/E0.csv"
+    filename = site + "mmz4281/"+ str(season) + "/E0.csv"
     prem = pd.read_csv(filename)
     return prem
 
 
 
 
-def premLeagueStrengths(): # Create strengths df
-    prem = premGetScores()
+def premLeagueStrengths(today = datetime.date.today(), w = 0.33): # Create strengths df
+    
+    prem = premGetScores(today)
     
     hometeam = prem.loc[:, "HomeTeam"].value_counts().sort_index()
     awayteam = prem.loc[:, "AwayTeam"].value_counts().sort_index()
@@ -66,26 +81,32 @@ def premLeagueStrengths(): # Create strengths df
 
 
 
-def premMeanHomeGoals():
-    strengths = premLeagueStrengths()
+def premMeanHomeGoals(today = datetime.date.today(), w = 0.33):
+    strengths = premLeagueStrengths(today, w)
     meanHomeGoals = sum(strengths['HomeGoals'])/sum(strengths['HomeGames'])
     return meanHomeGoals
 
 
 
-def premMeanAwayGoals():
-    strengths = premLeagueStrengths()
+def premMeanAwayGoals(today = datetime.date.today(), w = 0.33):
+    strengths = premLeagueStrengths(today, w)
     meanAwayGoals = sum(strengths['AwayGoals'])/sum(strengths['AwayGames'])
     return meanAwayGoals
 
 
 
 
-def premGetFixtures():    # Obtain file containing future fixtures as csv
+def premGetFixtures(today = datetime.date.today()):    # Obtain file containing future fixtures as csv
     
-    strengths = premLeagueStrengths()
+    strengths = premLeagueStrengths(today, 0.33)
     
-    filename2 = 'https://fixturedownload.com/download/epl-2019-GMTStandardTime.csv' 
+    def seasonYear(today):
+        if today.month < 8:
+            return today.year - 1
+        else:
+            return today.year
+    
+    filename2 = 'https://fixturedownload.com/download/epl-' + str(seasonYear(today)) +'-GMTStandardTime.csv' 
     fixtures = pd.read_csv(filename2) 
     fixtures['Date'] = pd.to_datetime(fixtures['Date'], format = '%d/%m/%Y %H:%M')
     
@@ -106,10 +127,10 @@ def premGetFixtures():    # Obtain file containing future fixtures as csv
 
 
     
-def premLeaguePredictions():    # Create predictions df
+def premLeaguePredictions(today = datetime.date.today(), w = 0.33, future_games = 10):    # Create predictions df
     
-    fixtures = premGetFixtures()
-    strengths = premLeagueStrengths()
+    fixtures = premGetFixtures(today)
+    strengths = premLeagueStrengths(today, w)
     
     predictions = fixtures.copy().iloc[:future_games]
     predictions.columns = ['HomeTeam', 'AwayTeam']
@@ -157,8 +178,8 @@ def premLeaguePredictions():    # Create predictions df
 
 
 
-def premLeagueGraphs():    # Display results
-    predictions = premLeaguePredictions()
+def premLeagueGraphs(today = datetime.date.today(), w = 0.33, future_games = 10):    # Display results
+    predictions = premLeaguePredictions(today, w, future_games)
     
     labels1 = ['Home win', 'Draw', 'Away win']
     probabilities1 = predictions.loc[:, ['P(HomeWin)', 'P(Draw)', 'P(AwayWin)']]
@@ -209,8 +230,8 @@ def premLeagueGraphs():    # Display results
         plt.clf()
     
     
-def premLeagueSummary(): # Create summary df
-    predictions = premLeaguePredictions()
+def premLeagueSummary(today = datetime.date.today(), w = 0.33, future_games = 10): # Create summary df
+    predictions = premLeaguePredictions(today, w, future_games)
     
     summary = predictions.iloc[:, 0:2]
     
