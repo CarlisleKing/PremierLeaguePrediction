@@ -5,4 +5,4 @@ premierleaguepredictor.py
 Contains descriptions of funtions to predict future Premier League games.
 
 premierleaguetesting.py
-Compares predictions of previous file on historical matches with actual results.
+Compares predictions the model would have made on past matches with actual results.
